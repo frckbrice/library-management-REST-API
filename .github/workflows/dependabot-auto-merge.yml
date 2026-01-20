@@ -1,0 +1,57 @@
+# Dependabot Auto-Merge Workflow
+# 
+# This workflow automatically merges Dependabot PRs that pass all CI checks.
+# It helps keep dependencies up-to-date with minimal manual intervention.
+#
+# Requirements:
+# - Dependabot must be enabled in repository settings
+# - Branch protection rules should allow auto-merge
+
+name: Dependabot Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Auto-merge Dependabot PRs that pass CI
+  auto-merge:
+    name: Auto-merge Dependabot PRs
+    runs-on: ubuntu-latest
+    
+    # Only run for Dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+    
+    steps:
+      - name: Wait for CI to complete
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          check-regexp: '^CI'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+          allowed-conclusions: success,neutral
+      
+      # Approve the PR
+      - name: Approve PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              event: 'APPROVE'
+            })
+      
+      # Enable auto-merge
+      - name: Enable auto-merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              merge_method: 'squash'
+            })
