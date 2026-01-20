@@ -5,15 +5,15 @@
 
 ## Type of Change
 <!-- Mark the relevant option with an 'x' -->
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📚 Documentation update
-- [ ] 🎨 Code style/formatting changes
-- [ ] ♻️ Code refactoring
-- [ ] ⚡ Performance improvement
-- [ ] ✅ Test updates
-- [ ] 🔧 Build/config changes
+- [ ]  Bug fix (non-breaking change which fixes an issue)
+- [ ]  New feature (non-breaking change which adds functionality)
+- [ ]  Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ]  Documentation update
+- [ ]  Code style/formatting changes
+- [ ]  Code refactoring
+- [ ]  Performance improvement
+- [ ]  Test updates
+- [ ]  Build/config changes
 
 ## Related Issues
 <!-- Link to related issues using #issue_number -->
