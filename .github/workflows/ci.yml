@@ -1,0 +1,123 @@
+# Continuous Integration Workflow
+# 
+# This workflow runs on every push and pull request to ensure code quality.
+# It performs the following checks:
+# 1. Type checking (TypeScript compilation without emitting files)
+# 2. Linting (ESLint)
+# 3. Testing (Jest)
+# 4. Building (TypeScript compilation)
+#
+# The workflow uses pnpm as the package manager and supports multiple Node.js versions.
+
+name: CI
+
+# Trigger the workflow on push and pull requests
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'fix/**'
+      - 'hotfix/**'
+      - 'release/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+# Allow only one concurrent workflow per branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Main CI job that runs all checks
+  ci:
+    name: CI Checks
+    runs-on: ubuntu-latest
+    
+    # Strategy to test against multiple Node.js versions
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+      fail-fast: false
+    
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Setup pnpm package manager
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      
+      # Setup Node.js with the version from matrix
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      
+      # Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      # Run TypeScript type checking
+      - name: Type check
+        run: pnpm check
+      
+      # Run ESLint to check code quality
+      - name: Lint
+        run: pnpm lint
+        continue-on-error: false
+      
+      # Run tests with Jest
+      - name: Test
+        run: pnpm test
+        env:
+          NODE_ENV: test
+      
+      # Build the TypeScript project
+      - name: Build
+        run: pnpm build
+      
+      # Upload test coverage reports (optional, for coverage visualization)
+      - name: Upload coverage reports
+        if: matrix.node-version == '20.x'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  # Separate job for security checks (dependencies vulnerability scanning)
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      # Run pnpm audit to check for known vulnerabilities
+      - name: Run security audit
+        run: pnpm audit --audit-level=moderate
+        continue-on-error: true

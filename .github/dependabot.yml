@@ -1,0 +1,43 @@
+# Dependabot Configuration
+# 
+# This file configures Dependabot to automatically check for and create PRs
+# for dependency updates. It helps keep your project dependencies secure and up-to-date.
+#
+# Dependabot will:
+# - Check for updates daily
+# - Create PRs for security updates immediately
+# - Group related updates together
+# - Use the same package manager (pnpm) as your project
+
+version: 2
+updates:
+  # Enable version updates for npm/pnpm packages
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily" # Check for updates daily
+      time: "04:00" # At 4 AM UTC
+    open-pull-requests-limit: 10 # Maximum number of open PRs
+    reviewers:
+      - "frckbrice" # Add your GitHub username here
+    labels:
+      - "dependencies"
+      - "automated"
+    # Group updates by dependency type
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Ignore specific packages if needed
+    ignore:
+      # Example: Ignore major version updates for a specific package
+      # - dependency-name: "package-name"
+      #   update-types: ["version-update:semver-major"]
+    
+    # Commit message preferences
+    commit-message:
+      prefix: "chore"
+      include: "scope"
