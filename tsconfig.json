@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "strict": true, // Must be false to fully suppress type errors
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true, // Moved inside compilerOptions
+    "types": [
+      "node",
+      "jest"
+    ],
+    "resolveJsonModule": true
+  },
+  "include": [
+    "index.ts",
+    "server/**/*.ts",
+    "config/**/*.ts",
+    "middlewares/**/*.ts",
+    "drizzle.config.ts"
+  ],
+  "exclude": [
+    "**/node_modules/drizzle-orm/sqlite-core/**",
+    "**/node_modules/drizzle-orm/singlestore-core/**",
+    "**/node_modules/drizzle-orm/mysql-core/**",
+    "**/node_modules/drizzle-orm/sqlite-core*",
+    "**/node_modules/.pnpm/**/sqlite-core*"
+  ]
+}

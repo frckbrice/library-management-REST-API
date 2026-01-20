@@ -1,0 +1,7 @@
+node_modules
+dist
+
+.env
+server/reset-db
+middleware/logger
+/logs
