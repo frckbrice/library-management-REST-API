@@ -17,7 +17,8 @@
 		"db:seed": "tsx ./config/database/seed.ts",
 		"db:migrate": "npx drizzle-kit migrate",
 		"db:generate": "npx drizzle-kit generate",
-		"db:reset": "tsx ./config/database/reset-db.ts"
+		"db:reset": "tsx ./config/database/reset-db.ts",
+		"git-flow": "bash scripts/git-flow.sh"
 	},
 	"dependencies": {
 		"@jridgewell/trace-mapping": "^0.3.25",
@@ -49,6 +50,7 @@
 		"pg": "^8.16.0",
 		"ts-jest": "^29.4.0",
 		"uuid": "^11.1.0",
+		"winston": "^3.19.0",
 		"ws": "^8.18.0",
 		"zod": "^3.24.2",
 		"zod-validation-error": "^3.4.0"

@@ -38,7 +38,7 @@ class CloudinaryService {
 
         try {
             const result = await cloudinary.uploader.upload(file as any, {
-                folder: options.folder || 'museum-platform',
+                folder: options.folder || 'library-platform',
                 public_id: options.public_id,
                 transformation: options.transformation,
                 tags: options.tags,

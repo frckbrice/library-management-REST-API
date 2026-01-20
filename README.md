@@ -96,7 +96,7 @@ This is a production-ready Node.js backend application built with Express.js, po
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd museumCall_backend
+cd library-management-REST-API
 ```
 
 2. Install dependencies:
@@ -109,8 +109,8 @@ Create a `.env` file in the root directory with the following variables:
 
 ```env
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/library_db
-DATAAPI_URL=your_neon_dataapi_url_if_using_neon
+DATABASE_localURL=postgresql://user:password@localhost:5432/library_db
+DATABASE_API_URL=your_neon_dataapi_url_if_using_neon
 
 # Session
 SESSION_SECRET=your_session_secret_key

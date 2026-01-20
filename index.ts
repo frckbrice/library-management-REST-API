@@ -1,4 +1,4 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import connectPgSimple from "connect-pg-simple";
@@ -7,26 +7,10 @@ import { registerRoutes } from "./server/routes";
 import { Pool as NeonPool } from "@neondatabase/serverless";
 import { Pool } from "pg";
 import errorHandler from "./middlewares/errors/error-handler";
+import logger from "./middlewares/logger";
 import cors from 'cors';
-import { MemStorage } from "./config/database/storage";
-
+import { env } from "./src/config/env";
 import corsOptions from "./config/cors/cors-options";
-
-// Declare session data
-declare module "express-session" {
-  interface SessionData {
-    user?: {
-      id: string;
-      username: string;
-      fullName: string;
-      email: string;
-      role: string;
-      libraryId?: string;
-    };
-  }
-}
-
-const PORT = process.env.PORT || 5500;;
 
 // Setup session stores
 const MemoryStoreSession = MemoryStore(session);
@@ -43,7 +27,7 @@ app.use(cors(corsOptions));
 
 // Session middleware
 app.use(session({
-  store: process.env.DATAAPI_URL
+  store: env.DATAAPI_URL
     ? new PgStore({
       pool,
       tableName: 'session',
@@ -52,45 +36,17 @@ app.use(session({
     : new MemoryStoreSession({
       checkPeriod: 86400000 // every 24h
     }),
-  secret: process.env.SESSION_SECRET || 'library_connect_secret',
+  secret: env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: env.NODE_ENV === 'production',
     maxAge: 1000 * 60 * 60 * 24 // 24 hours
   }
 }));
 
-// Logging middleware
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      console.log(logLine);
-    }
-  });
-
-  next();
-});
+// Request logging middleware
+app.use(logger);
 
 // Main async block
 (async () => {
@@ -100,9 +56,10 @@ app.use((req, res, next) => {
   app.use(errorHandler);
 
   // Start server
-  server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-  }).on("error", () => {
-    console.error("Error starting server");
+  server.listen(env.PORT, () => {
+    console.log(`Server running at http://localhost:${env.PORT} in ${env.NODE_ENV} mode`);
+  }).on("error", (error) => {
+    console.error("Error starting server:", error);
+    process.exit(1);
   });
 })();
