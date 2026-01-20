@@ -69,12 +69,3 @@ jobs:
           name: dist
           path: dist/
           retention-days: 30
-      
-      # Optional: Upload to GitHub Releases
-      - name: Upload to release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/**
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
