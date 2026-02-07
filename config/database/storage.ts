@@ -53,6 +53,7 @@ export interface IStorage {
   getTotalLibraries(options?: { approved?: boolean; featured?: boolean; type?: string }): Promise<number>;
   createLibrary(library: InsertLibrary): Promise<Library>;
   updateLibrary(id: string, data: Partial<Library>): Promise<Library | undefined>;
+  deleteLibrary(id: string): Promise<boolean>;
 
   // Stories
   getStory(id: string): Promise<Story | undefined>;
@@ -1040,6 +1041,16 @@ export class MemStorage implements IStorage {
     const updatedLibrary = { ...library, ...data };
     this.librarys.set(id, updatedLibrary);
     return updatedLibrary;
+  }
+
+  async deleteLibrary(id: string): Promise<boolean> {
+    const library = await this.getLibrary(id);
+    if (!library) return false;
+    for (const [, user] of this.users) {
+      if (user.libraryId === id) (user as any).libraryId = null;
+    }
+    this.librarys.delete(id);
+    return true;
   }
 
   // Story methods

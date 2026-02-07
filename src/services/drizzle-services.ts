@@ -237,6 +237,20 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Deletes a library by ID. Unassigns users linked to this library, then deletes (cascade removes stories, events, media, contact messages). */
+    async deleteLibrary(id: string): Promise<boolean> {
+        try {
+            const [existing] = await db.select().from(libraries).where(eq(libraries.id, id)).limit(1);
+            if (!existing) return false;
+            await db.update(users).set({ libraryId: null }).where(eq(users.libraryId, id));
+            const result = await db.delete(libraries).where(eq(libraries.id, id)).returning();
+            return result.length > 0;
+        } catch (error) {
+            console.error('Error in deleteLibrary:', error);
+            return false;
+        }
+    }
+
     // Stories
     /** Fetches a story by ID. */
     async getStory(id: string): Promise<Story | undefined> {

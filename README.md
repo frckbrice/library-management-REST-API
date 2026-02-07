@@ -5,6 +5,8 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B%20%7C%2022-green.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+![Library Management REST API](public/images/lib_management_rest_api.png)
+
 A production-ready RESTful API for library content management—collections, stories, media, events, and user operations. Built with modern TypeScript, Express.js, and PostgreSQL. Designed for scalability, maintainability, and secure multi-tenant operations.
 
 **Repository:** [github.com/frckbrice/library-management-REST-API](https://github.com/frckbrice/library-management-REST-API)

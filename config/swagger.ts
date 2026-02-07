@@ -223,6 +223,20 @@ export const openApiDocument = {
           '500': errorResponse('Failed to upload image'),
         },
       },
+      delete: {
+        tags: ['Libraries'],
+        summary: 'Delete library',
+        description: 'Superadmin only. Permanently deletes a library. Unassigns linked users; stories, events, media, and contact messages for this library are removed (cascade).',
+        security: [{ cookieAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        responses: {
+          '204': { description: 'Library deleted successfully' },
+          '401': errorResponse('Authentication required', 'AUTHENTICATION_ERROR', 'Authentication required'),
+          '403': errorResponse('Insufficient permissions', 'AUTHORIZATION_ERROR', 'Insufficient permissions'),
+          '404': errorResponse('Library not found', 'NOT_FOUND', 'Library not found'),
+          '500': errorResponse('Internal server error', 'INTERNAL_ERROR', 'Internal server error'),
+        },
+      },
     },
     [`${apiPath}/stories`]: {
       get: {

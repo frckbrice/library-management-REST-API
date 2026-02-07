@@ -114,6 +114,16 @@ export function registerLibrariesRoutes(app: Express, global_path: string) {
         });
     }));
 
+    // Delete library (superadmin only)
+    app.delete(`${global_path}/libraries/:id`, requireSuperAdmin, apiHandler(async (req, res) => {
+        const libraryId = req.params.id;
+        const existing = await drizzleService.getLibrary(libraryId);
+        if (!existing) throw new NotFoundError('Library');
+        const deleted = await drizzleService.deleteLibrary(libraryId);
+        if (!deleted) return res.status(500).json({ error: 'Failed to delete library' });
+        return res.status(204).send();
+    }));
+
     // Librarys endpoints
     app.get(`${global_path}/libraries`, async (req, res) => {
         try {
