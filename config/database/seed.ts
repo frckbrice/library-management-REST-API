@@ -39,7 +39,7 @@ async function seed() {
 
 
     // Add librarys
-    const [metMuseum] = await (db as any).insert(librarys).values({
+    const [metMuseum] = await (db as any).insert(libraries).values({
       name: "Metropolitan Museum of Art",
       description: "One of the world's largest and finest art librarys, with a collection spanning 5,000 years of world culture.",
       location: "1000 Fifth Avenue",
@@ -56,7 +56,7 @@ async function seed() {
       coordinates: { lat: 40.7794, lng: -73.9632 }
     }).returning();
 
-    const [natMuseum] = await (db as any).insert(librarys).values({
+    const [natMuseum] = await (db as any).insert(libraries).values({
       name: "National Gallery of History",
       description: "Explore artifacts spanning over 3,000 years of human civilization.",
       location: "Trafalgar Square",
@@ -72,7 +72,7 @@ async function seed() {
       coordinates: { lat: 51.5089, lng: -0.1283 },
     }).returning();
 
-    const [musIMuseum] = await (db as any).insert(librarys).values({
+    const [musIMuseum] = await (db as any).insert(libraries).values({
       name: "Museum of Science and Innovation",
       description: "Interactive exhibits showcasing technological advances through the ages.",
       location: "2-3-1 Aomi, Koto",
@@ -88,7 +88,7 @@ async function seed() {
       coordinates: { lat: 35.6196, lng: 139.7782 },
     }).returning();
 
-    const [louvreMuseum] = await (db as any).insert(librarys).values({
+    const [louvreMuseum] = await (db as any).insert(libraries).values({
       name: "Louvre Museum",
       description: "The world's largest art library and a historic monument in Paris, France.",
       location: "Rue de Rivoli",
@@ -105,7 +105,7 @@ async function seed() {
       coordinates: { lat: 48.8606, lng: 2.3376 }
     }).returning();
 
-    const [britishMuseum] = await (db as any).insert(librarys).values({
+    const [britishMuseum] = await (db as any).insert(libraries).values({
       name: "British Museum",
       description: "A public library dedicated to human history, art and culture, located in London.",
       location: "Great Russell Street",
@@ -115,14 +115,14 @@ async function seed() {
       isActive: true,
       isApproved: true,
       isFeatured: false,
-      logoUrl: "https://images.unsplash.com/photo-1485842295075-1c7b2037114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80&q=80", 
+      logoUrl: "https://images.unsplash.com/photo-1485842295075-1c7b2037114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=80&h=80&q=80",
       featuredImageUrl: "https://images.unsplash.com/photo-1485842295075-1c7b2037114c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=500&q=80",
       website: "https://www.britishlibrary.org",
       contactEmail: "info@britishlibrary.org",
       coordinates: { lat: 51.5194, lng: -0.1269 }
     }).returning();
 
-    const [modernMuseum] = await (db as any).insert(librarys).values({
+    const [modernMuseum] = await (db as any).insert(libraries).values({
       name: "Museum of Modern Art",
       description: "One of the largest and most influential librarys of modern art in the world.",
       location: "11 West 53rd Street",

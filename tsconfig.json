@@ -18,7 +18,7 @@
     "index.ts",
     "server/**/*.ts",
     "config/**/*.ts",
-    "middlewares/**/*.ts",
+    "src/**/*.ts",
     "drizzle.config.ts"
   ],
   "exclude": [

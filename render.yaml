@@ -1,0 +1,16 @@
+# Render Blueprint – build and runtime in sync with Render
+# Set DATABASE_URL, SESSION_SECRET, and other secrets in Render Dashboard → Environment
+
+services:
+  - type: web
+    name: library-management-api
+    runtime: node
+
+    buildCommand: pnpm install && pnpm run build
+    startCommand: pnpm start
+
+    healthCheckPath: /api/v1/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production

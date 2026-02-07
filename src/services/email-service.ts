@@ -1,3 +1,13 @@
+/**
+ * Email Service
+ *
+ * Sends emails via Gmail SMTP (nodemailer): response emails to contact form
+ * visitors, acknowledgment emails, and generic sendEmail. Requires
+ * GMAIL_USER and GMAIL_APP_PASSWORD; logs and returns false if not configured.
+ *
+ * @module src/services/email-service
+ */
+
 import nodemailer from 'nodemailer';
 
 // Check for Gmail SMTP configuration
@@ -17,6 +27,7 @@ const transporter = nodemailer.createTransport({
     port: 465,
 });
 
+/** Parameters for generic sendEmail. */
 interface EmailParams {
     to: string;
     from: string;
@@ -25,6 +36,7 @@ interface EmailParams {
     html?: string;
 }
 
+/** Parameters for sending a reply to a contact form submission. */
 interface ResponseEmailParams {
     visitorEmail: string;
     visitorName: string;
@@ -35,6 +47,11 @@ interface ResponseEmailParams {
     libraryEmail: string;
 }
 
+/**
+ * Sends an email reply to a visitor who submitted a contact form (HTML + text).
+ * @param params - Reply content and library/visitor details
+ * @returns true if sent, false if SMTP not configured or send failed
+ */
 export async function sendResponseEmail(params: ResponseEmailParams): Promise<boolean> {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
         console.log("Email would be sent to:", params.visitorEmail);
@@ -107,6 +124,11 @@ This is an automated response from our library inquiry system. Please do not rep
     }
 }
 
+/**
+ * Sends an acknowledgment email to a visitor after they submit a contact form.
+ * @param params - Visitor email/name, subject, library name/email
+ * @returns true if sent, false if SMTP not configured or send failed
+ */
 export async function sendAcknowledgmentEmail(params: {
     visitorEmail: string;
     visitorName: string;
@@ -162,6 +184,11 @@ export async function sendAcknowledgmentEmail(params: {
     }
 }
 
+/**
+ * Sends a generic email (to, from, subject, text/html).
+ * @param params - Email parameters
+ * @returns true if sent, false if SMTP not configured or send failed
+ */
 export async function sendEmail(params: EmailParams): Promise<boolean> {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
         console.log("Email would be sent:", params);

@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { validate, validateQuery, validateParams } from '../../../src/middlewares/validation';
 import { ValidationError } from '../../../src/utils/errors';
-import { createMockRequest, createMockResponse, createMockNext } from '../../utils/mocks';
+import { createMockRequest, createMockResponse, createMockNext } from '../../helpers/mocks';
 
 describe('Validation Middleware', () => {
   let mockRequest: Partial<Request>;
@@ -38,17 +38,19 @@ describe('Validation Middleware', () => {
       expect(mockNext).toHaveBeenCalledWith();
     });
 
-    it('should throw ValidationError when validation fails', () => {
+    it('should call next with ValidationError when validation fails', () => {
       mockRequest.body = {
         username: '',
         password: '123',
       };
 
       const middleware = validate(loginSchema);
+      middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(() => {
-        middleware(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(ValidationError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const err = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(err.name).toBe('ValidationError');
+      expect(err.statusCode).toBe(400);
     });
 
     it('should format validation errors correctly', () => {
@@ -58,17 +60,14 @@ describe('Validation Middleware', () => {
       };
 
       const middleware = validate(loginSchema);
+      middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      try {
-        middleware(mockRequest as Request, mockResponse as Response, mockNext);
-        fail('Should have thrown ValidationError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ValidationError);
-        const validationError = error as ValidationError;
-        expect(validationError.errors).toBeDefined();
-        expect(validationError.errors).toHaveProperty('username');
-        expect(validationError.errors).toHaveProperty('password');
-      }
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const validationError = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(validationError.name).toBe('ValidationError');
+      expect(validationError.errors).toBeDefined();
+      expect(validationError.errors).toHaveProperty('username');
+      expect(validationError.errors).toHaveProperty('password');
     });
 
     it('should handle nested validation errors', () => {
@@ -87,17 +86,14 @@ describe('Validation Middleware', () => {
       };
 
       const middleware = validate(nestedSchema);
+      middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      try {
-        middleware(mockRequest as Request, mockResponse as Response, mockNext);
-        fail('Should have thrown ValidationError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ValidationError);
-        const validationError = error as ValidationError;
-        expect(validationError.errors).toBeDefined();
-        expect(validationError.errors).toHaveProperty('user.name');
-        expect(validationError.errors).toHaveProperty('user.email');
-      }
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const validationError = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(validationError.name).toBe('ValidationError');
+      expect(validationError.errors).toBeDefined();
+      expect(Object.keys(validationError.errors || {})).toContain('user.name');
+      expect(Object.keys(validationError.errors || {})).toContain('user.email');
     });
 
     it('should pass non-ZodError to next', () => {
@@ -105,12 +101,10 @@ describe('Validation Middleware', () => {
       mockRequest.body = {};
 
       const middleware = validate(invalidSchema);
-      
-      // This should not throw but pass error to next
       middleware(mockRequest as Request, mockResponse as Response, mockNext);
-      
-      // The error handling depends on implementation, but next should be called
-      expect(mockNext).toHaveBeenCalled();
+
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 
@@ -134,7 +128,7 @@ describe('Validation Middleware', () => {
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw ValidationError when query validation fails', () => {
+    it('should call next with ValidationError when query validation fails', () => {
       const strictQuerySchema = z.object({
         page: z.string().min(1, 'Page is required'),
       });
@@ -144,10 +138,12 @@ describe('Validation Middleware', () => {
       };
 
       const middleware = validateQuery(strictQuerySchema);
+      middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(() => {
-        middleware(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(ValidationError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const err = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(err.name).toBe('ValidationError');
+      expect(err.message).toBe('Query validation failed');
     });
 
     it('should format query validation errors correctly', () => {
@@ -160,16 +156,13 @@ describe('Validation Middleware', () => {
       };
 
       const middleware = validateQuery(strictQuerySchema);
+      middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      try {
-        middleware(mockRequest as Request, mockResponse as Response, mockNext);
-        fail('Should have thrown ValidationError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ValidationError);
-        const validationError = error as ValidationError;
-        expect(validationError.message).toBe('Query validation failed');
-        expect(validationError.errors).toBeDefined();
-      }
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const validationError = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(validationError.name).toBe('ValidationError');
+      expect(validationError.message).toBe('Query validation failed');
+      expect(validationError.errors).toBeDefined();
     });
   });
 
@@ -189,16 +182,18 @@ describe('Validation Middleware', () => {
       expect(mockNext).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw ValidationError when params validation fails', () => {
+    it('should call next with ValidationError when params validation fails', () => {
       mockRequest.params = {
         id: 'invalid-id',
       };
 
       const middleware = validateParams(paramsSchema);
+      middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(() => {
-        middleware(mockRequest as Request, mockResponse as Response, mockNext);
-      }).toThrow(ValidationError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const err = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(err.name).toBe('ValidationError');
+      expect(err.message).toBe('Parameter validation failed');
     });
 
     it('should format params validation errors correctly', () => {
@@ -207,17 +202,14 @@ describe('Validation Middleware', () => {
       };
 
       const middleware = validateParams(paramsSchema);
+      middleware(mockRequest as Request, mockResponse as Response, mockNext);
 
-      try {
-        middleware(mockRequest as Request, mockResponse as Response, mockNext);
-        fail('Should have thrown ValidationError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ValidationError);
-        const validationError = error as ValidationError;
-        expect(validationError.message).toBe('Parameter validation failed');
-        expect(validationError.errors).toBeDefined();
-        expect(validationError.errors).toHaveProperty('id');
-      }
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      const validationError = (mockNext as jest.Mock).mock.calls[0][0];
+      expect(validationError.name).toBe('ValidationError');
+      expect(validationError.message).toBe('Parameter validation failed');
+      expect(validationError.errors).toBeDefined();
+      expect(validationError.errors).toHaveProperty('id');
     });
   });
 });

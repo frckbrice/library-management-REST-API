@@ -12,7 +12,7 @@
  * 
  * Error Handler:
  *   All errors are caught by the error handler middleware in
- *   middlewares/errors/error-handler.ts which formats the response.
+ *   src/middlewares/error-handler.ts which formats the response.
  */
 
 /**

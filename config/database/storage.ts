@@ -39,10 +39,10 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
 
-  // Librarys
+  // Libraries
   getLibrary(id: string): Promise<Library | undefined>;
   getLibraryByName(name: string): Promise<Library | undefined>;
-  getLibrarys(options?: {
+  getLibraries(options?: {
     approved?: boolean;
     featured?: boolean;
     type?: string;
@@ -50,7 +50,7 @@ export interface IStorage {
     limit?: number;
     offset?: number;
   }): Promise<Library[]>;
-  getTotalLibrarys(options?: { approved?: boolean; featured?: boolean; type?: string }): Promise<number>;
+  getTotalLibraries(options?: { approved?: boolean; featured?: boolean; type?: string }): Promise<number>;
   createLibrary(library: InsertLibrary): Promise<Library>;
   updateLibrary(id: string, data: Partial<Library>): Promise<Library | undefined>;
 
@@ -198,22 +198,22 @@ export class MemStorage implements IStorage {
 
   public async initSampleData() {
 
-  // console.log("\n\nInitializing sample data...");
-  // console.log("\n\nClearing existing data...")
+    // console.log("\n\nInitializing sample data...");
+    // console.log("\n\nClearing existing data...")
 
-  // // Drop tables in the reverse order of their dependencies
-  // await db.delete(analytics);
-  // await db.delete(contactMessages);
-  // await db.delete(events);
-  // await db.delete(timelines);
-  // await db.delete(mediaItems);
-  // await db.delete(stories);
-  // await db.delete(users);
-  // await db.delete(librarys);
-  // await db.delete(emailTemplates);
-  // await db.delete(messageResponses);
+    // // Drop tables in the reverse order of their dependencies
+    // await db.delete(analytics);
+    // await db.delete(contactMessages);
+    // await db.delete(events);
+    // await db.delete(timelines);
+    // await db.delete(mediaItems);
+    // await db.delete(stories);
+    // await db.delete(users);
+    // await db.delete(librarys);
+    // await db.delete(emailTemplates);
+    // await db.delete(messageResponses);
 
-  // console.log("\n\nRebuilding tables...")
+    // console.log("\n\nRebuilding tables...")
 
     // Create super admin user
     this.createUser({
@@ -968,7 +968,7 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async getLibrarys(options?: {
+  async getLibraries(options?: {
     approved?: boolean;
     featured?: boolean;
     type?: string;
@@ -1004,7 +1004,7 @@ export class MemStorage implements IStorage {
     return librarys;
   }
 
-  async getTotalLibrarys(options?: {
+  async getTotalLibraries(options?: {
     approved?: boolean;
     featured?: boolean;
     type?: string

@@ -1,7 +1,16 @@
-import type { Express } from "express";
-import drizzleService from "../../services/drizzle-services";
+/**
+ * Maintenance Routes
+ *
+ * Health check, maintenance mode toggle, schedule windows, backups (list/create).
+ * State is in-memory; in production should be persisted (e.g. DB/Redis).
+ *
+ * @module src/routes/maintenance.routes
+ */
 
-// Maintenance state (in production, this should be in a database or Redis)
+import type { Express } from "express";
+import drizzleService from "../services/drizzle-services";
+
+/** In-memory maintenance state; prefer DB/Redis in production. */
 let maintenanceMode = false;
 const maintenanceWindows: any[] = [];
 const backupHistory: any[] = [
@@ -11,6 +20,11 @@ const backupHistory: any[] = [
     { id: 4, type: 'database', size: '885 MB', created: new Date('2025-06-15T02:00:00Z'), status: 'completed' },
 ];
 
+/**
+ * Registers maintenance routes: health, status, toggle, schedule, backup list/create, refresh.
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerMaintenanceRoutes(app: Express, global_path: string) {
     // health check endpoint
     app.get(`${global_path}/health`, async (req, res) => {

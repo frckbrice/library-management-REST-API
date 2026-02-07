@@ -1,7 +1,8 @@
 /**
  * Test Utilities and Mocks
- * 
- * Common mocks and utilities for testing
+ *
+ * Shared helpers for tests (mock Request/Response/session). For unit tests
+ * of application code under src/utils/, see tests/unit/utils/.
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -43,14 +44,14 @@ export const createMockNext = (): NextFunction => {
 /**
  * Creates a mock session with user data
  */
-export const createMockSession = (user?: {
+export const createMockSession = (user?: Partial<{
     id: string;
     username: string;
     fullName: string;
     email: string;
     role: string;
     libraryId?: string;
-}): any => {
+}>): any => {
     const defaultUser = {
         id: 'test-user-id',
         username: 'testuser',
@@ -61,7 +62,7 @@ export const createMockSession = (user?: {
     };
 
     return {
-        user: user || defaultUser,
+        user: { ...defaultUser, ...user },
         destroy: jest.fn((callback: (err?: Error) => void) => callback(undefined)),
     };
 };

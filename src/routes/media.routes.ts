@@ -1,12 +1,25 @@
+/**
+ * Media Routes
+ *
+ * List/get/create/update/delete media items. List supports libraryId, galleryId,
+ * mediaType, tags, approved, limit, offset. Create/update use requireAuth and
+ * optional file upload.
+ *
+ * @module src/routes/media.routes
+ */
+
 import type { Express } from "express";
-import drizzleService from "../../services/drizzle-services";
+import drizzleService from "../services/drizzle-services";
 import { upload, apiHandler, uploadImageToCloudinary } from "./shared";
 
+/**
+ * Registers media routes: list/get/create/update/delete media items; admin tags. Create/update use requireAuth and optional file upload.
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerMediaRoutes(app: Express, global_path: string) {
-    // Media endpoints
     app.get(`${global_path}/media-items`, async (req, res) => {
         try {
-            // Extract query parameters
             const libraryId = req.query.libraryId ? String(req.query.libraryId) : undefined;
             const galleryId = req.query.galleryId ? String(req.query.galleryId) : undefined;
 
@@ -128,6 +141,31 @@ export function registerMediaRoutes(app: Express, global_path: string) {
 
         const updatedMedia = await drizzleService.updateMediaItem(mediaId, updateData);
         return res.status(200).json(updatedMedia);
+    }));
+
+    // Delete media item
+    app.delete(`${global_path}/media-items/:id`, apiHandler(async (req, res) => {
+        if (!req.session?.user) {
+            return res.status(403).json({ error: 'Unauthorized - not logged in' });
+        }
+
+        const mediaId = req.params.id;
+        const existingMedia = await drizzleService.getMediaItem(mediaId);
+
+        if (!existingMedia) {
+            return res.status(404).json({ error: 'Media item not found' });
+        }
+
+        if (req.session.user.role === 'library_admin' && existingMedia.libraryId !== req.session.user.libraryId) {
+            return res.status(403).json({ error: 'Unauthorized - you can only delete media for your library' });
+        }
+
+        const deleted = await drizzleService.deleteMediaItem(mediaId);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Media item not found' });
+        }
+
+        return res.status(204).send();
     }));
 
     // Admin: Get all unique media tags

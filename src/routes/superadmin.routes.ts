@@ -1,9 +1,24 @@
-import type { Express } from "express";
-import drizzleService from "../../services/drizzle-services";
-import bcrypt from "bcrypt";
+/**
+ * Super Admin Routes
+ *
+ * Platform stats, pending stories/media, approve/reject, libraries and users
+ * management. All endpoints require super_admin role (enforced in route or middleware).
+ *
+ * @module src/routes/superadmin.routes
+ */
 
+import type { Express } from "express";
+import drizzleService from "../services/drizzle-services";
+import bcrypt from "bcrypt";
+import { sendApiError, ErrorCode } from "../utils/api-response";
+
+/**
+ * Registers super admin routes: stats, moderation (stories/media), approve/reject, libraries, users CRUD, password reset.
+ * All endpoints assume super_admin role is enforced by caller/middleware.
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerSuperAdminRoutes(app: Express, global_path: string) {
-    // Super Admin stats endpoint
     app.get(`${global_path}/sadmin/stats`, async (req, res) => {
         try {
             // Get counts of various entities for the dashboard
@@ -195,7 +210,7 @@ export function registerSuperAdminRoutes(app: Express, global_path: string) {
                 }
             }
 
-            return res.status(500).json({ error: error?.message || 'Internal server error' });
+            return sendApiError(res, 500, 'An unexpected error occurred. Please try again or contact support.', ErrorCode.INTERNAL_ERROR);
         }
     });
 

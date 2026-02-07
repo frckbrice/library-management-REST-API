@@ -1,10 +1,26 @@
-import type { Express } from "express";
-import drizzleService from "../../services/drizzle-services";
-import { apiHandler } from "./shared";
+/**
+ * Admin Routes
+ *
+ * Library-admin dashboard: stats, analytics, activity, galleries, image delete.
+ * All endpoints require requireAuth; libraryId is taken from session.
+ *
+ * @module src/routes/admin.routes
+ */
 
+import type { Express } from "express";
+import drizzleService from "../services/drizzle-services";
+import { requireAuth } from "../middlewares/auth";
+import { apiHandler } from "./shared";
+import { sendApiError, ErrorCode } from "../utils/api-response";
+
+/**
+ * Registers admin routes: dashboard stats, analytics, activity, galleries, and image delete.
+ * All routes use requireAuth and session libraryId where applicable.
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerAdminRoutes(app: Express, global_path: string) {
-    // Analytics endpoints
-    app.get(`${global_path}/admin/dashboard/stats`, async (req, res) => {
+    app.get(`${global_path}/admin/dashboard/stats`, requireAuth, async (req, res) => {
         try {
             const libraryId = req.session.user?.libraryId;
             if (!libraryId) {
@@ -34,7 +50,7 @@ export function registerAdminRoutes(app: Express, global_path: string) {
         }
     });
 
-    app.get(`${global_path}/admin/dashboard/analytics`, async (req, res) => {
+    app.get(`${global_path}/admin/dashboard/analytics`, requireAuth, async (req, res) => {
         try {
             const libraryId = req.session.user?.libraryId;
             if (!libraryId) {
@@ -96,7 +112,7 @@ export function registerAdminRoutes(app: Express, global_path: string) {
         }
     });
 
-    app.get(`${global_path}/admin/dashboard/activity`, async (req, res) => {
+    app.get(`${global_path}/admin/dashboard/activity`, requireAuth, async (req, res) => {
         try {
             const libraryId = req.session.user?.libraryId;
             if (!libraryId) {
@@ -147,7 +163,7 @@ export function registerAdminRoutes(app: Express, global_path: string) {
     }));
 
     // Delete Image Route
-    app.delete(global_path + '/admin/upload/image/:publicId', apiHandler(async (req, res) => {
+    app.delete(global_path + '/admin/upload/image/:publicId', requireAuth, apiHandler(async (req, res) => {
         const { publicId } = req.params;
         const { cloudinaryService } = await import("../../config/bucket-storage/cloudinary");
 
@@ -167,10 +183,7 @@ export function registerAdminRoutes(app: Express, global_path: string) {
             }
         } catch (error) {
             console.error("Image deletion error:", error);
-            return res.status(500).json({
-                error: 'Failed to delete image',
-                message: error instanceof Error ? error.message : String(error)
-            });
+            return sendApiError(res, 500, 'Failed to delete image. Please try again or contact support.', ErrorCode.INTERNAL_ERROR);
         }
     }));
 }
