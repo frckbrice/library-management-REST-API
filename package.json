@@ -55,7 +55,6 @@
 		"ws": "^8.18.0",
 		"zod": "^3.24.2",
 		"zod-validation-error": "^3.4.0",
-		"winston": "^3.17.0",
 		"swagger-ui-express": "^5.0.1"
 	},
 	"devDependencies": {
