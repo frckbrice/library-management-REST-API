@@ -8,10 +8,6 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true, // Moved inside compilerOptions
-    "types": [
-      "node",
-      "jest"
-    ],
     "resolveJsonModule": true
   },
   "include": [
@@ -19,6 +15,7 @@
     "server/**/*.ts",
     "config/**/*.ts",
     "src/**/*.ts",
+    "src/types/**/*.d.ts",
     "drizzle.config.ts"
   ],
   "exclude": [

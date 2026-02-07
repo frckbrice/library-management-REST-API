@@ -7,6 +7,7 @@
  * @module src/routes/auth.routes
  */
 
+/// <reference path="../types/express.d.ts" />
 import type { Express, Request, Response, NextFunction } from "express";
 import { compare } from "bcrypt";
 import drizzleService from "../services/drizzle-services";
