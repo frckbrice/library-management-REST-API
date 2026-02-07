@@ -1,18 +1,20 @@
 # Testing Documentation
 
-This directory contains unit tests for the museumCall backend project.
+This directory contains unit tests for the Library Management REST API project.
 
 ## Test Structure
 
 ```
 tests/
 ├── setup.ts              # Jest setup file
-├── utils/
-│   └── mocks.ts          # Common mocks and utilities
+├── helpers/
+│   └── mocks.ts          # Shared test helpers (mock Request/Response/session)
 ├── unit/
 │   ├── controllers/      # Controller unit tests
 │   ├── middlewares/      # Middleware unit tests
-│   └── utils/            # Utility unit tests
+│   ├── routes/           # Route registration tests
+│   ├── services/         # Service unit tests
+│   └── utils/            # Unit tests for src/utils/ (e.g. errors)
 └── README.md             # This file
 ```
 
@@ -76,7 +78,7 @@ describe('ComponentName', () => {
 ```
 
 ### Using Mocks
-Common mocks are available in `tests/utils/mocks.ts`:
+Common mocks are in `tests/helpers/mocks.ts`:
 - `createMockRequest()` - Creates a mock Express Request
 - `createMockResponse()` - Creates a mock Express Response
 - `createMockNext()` - Creates a mock NextFunction
@@ -84,7 +86,7 @@ Common mocks are available in `tests/utils/mocks.ts`:
 
 ### Example Test
 ```typescript
-import { createMockRequest, createMockResponse, createMockNext } from '../utils/mocks';
+import { createMockRequest, createMockResponse, createMockNext } from '../helpers/mocks';
 
 describe('MyMiddleware', () => {
   it('should handle request correctly', () => {

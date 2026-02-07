@@ -1,12 +1,25 @@
+/**
+ * Stories Routes
+ *
+ * Public: GET stories (list), GET story by id, GET tags, GET timelines by story.
+ * Admin: POST/PUT/DELETE stories, POST timeline. Uses requireAuth and optional
+ * file upload for featured image.
+ *
+ * @module src/routes/stories.routes
+ */
+
 import type { Express, Request, Response, NextFunction } from "express";
-import drizzleService from "../../services/drizzle-services";
-import { Story } from "../../config/database/schema";
-import { NotFoundError } from "../utils/errors";
-import { requireAuth } from "../../middlewares/auth";
+import drizzleService from "../services/drizzle-services";
+import { NotFoundError, AuthorizationError } from "../utils/errors";
+import { requireAuth } from "../middlewares/auth";
 import { upload, apiHandler, uploadImageToCloudinary } from "./shared";
 
+/**
+ * Registers stories routes: public list/get/tags/timelines; admin create/update/delete stories and timelines (requireAuth, optional file upload).
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerStoriesRoutes(app: Express, global_path: string) {
-    // Admin story management endpoints
     app.post(`${global_path}/admin/stories`, requireAuth, upload.single('featuredImage'), apiHandler(async (req, res) => {
         const libraryId = req.session.user!.libraryId;
 
@@ -47,7 +60,7 @@ export function registerStoriesRoutes(app: Express, global_path: string) {
 
         // Check ownership for library admins
         if (req.session.user!.role === 'library_admin' && existingStory.libraryId !== libraryId) {
-            throw new Error('You can only edit stories for your library');
+            throw new AuthorizationError('You can only edit stories for your library');
         }
 
         // Handle featured image upload
@@ -86,42 +99,62 @@ export function registerStoriesRoutes(app: Express, global_path: string) {
         });
     }));
 
-    // Admin timelines endpoints
-    app.get(`${global_path}/admin/stories/:id/timelines`, apiHandler(async (req, res) => {
-        // Relaxed authentication for testing
-        if (!req.session.user) {
-            return res.status(403).json({ error: 'Unauthorized - not logged in' });
+    // Admin delete story endpoint
+    app.delete(`${global_path}/admin/stories/:id`, requireAuth, apiHandler(async (req, res) => {
+        const storyId = req.params.id;
+        const existingStory = await drizzleService.getStory(storyId);
+
+        if (!existingStory) {
+            throw new NotFoundError('Story');
         }
 
+        const libraryId = req.session!.user!.libraryId;
+        if (req.session!.user!.role === 'library_admin' && existingStory.libraryId !== libraryId) {
+            throw new AuthorizationError('You can only delete stories for your library');
+        }
+
+        const deleted = await drizzleService.deleteStory(storyId);
+        if (!deleted) {
+            throw new NotFoundError('Story');
+        }
+
+        return res.status(204).send();
+    }));
+
+    // Admin timelines endpoints
+    app.get(`${global_path}/admin/stories/:id/timelines`, requireAuth, apiHandler(async (req, res) => {
         const storyId = req.params.id;
 
-        // Get the story first to verify ownership
         const story = await drizzleService.getStory(storyId);
 
         if (!story) {
-            return res.status(404).json({ error: 'Story not found' });
+            throw new NotFoundError('Story');
         }
 
-        // Skip ownership check for testing
+        // Verify ownership for library admins
+        const libraryId = req.session!.user!.libraryId;
+        if (req.session!.user!.role === 'library_admin' && story.libraryId !== libraryId) {
+            throw new AuthorizationError('You can only access timelines for stories in your library');
+        }
+
         // Get the timelines
         const timelines = await drizzleService.getTimelinesByStoryId(storyId);
-        console.log("Retrieved timelines:", timelines);
         return res.status(200).json(timelines);
     }));
 
-    app.post(`${global_path}/admin/stories/:id/timelines`, apiHandler(async (req, res) => {
-        // Relaxed authentication for testing
-        if (!req.session.user) {
-            return res.status(403).json({ error: 'Unauthorized - not logged in' });
-        }
-
+    app.post(`${global_path}/admin/stories/:id/timelines`, requireAuth, apiHandler(async (req, res) => {
         const storyId = req.params.id;
 
-        // Get the story first to verify it exists
         const story = await drizzleService.getStory(storyId);
 
         if (!story) {
-            return res.status(404).json({ error: 'Story not found' });
+            throw new NotFoundError('Story');
+        }
+
+        // Verify ownership for library admins
+        const libraryId = req.session!.user!.libraryId;
+        if (req.session!.user!.role === 'library_admin' && story.libraryId !== libraryId) {
+            throw new AuthorizationError('You can only add timelines to stories in your library');
         }
 
         // Create timeline data
@@ -132,13 +165,30 @@ export function registerStoriesRoutes(app: Express, global_path: string) {
             updatedAt: new Date()
         };
 
-        console.log("Creating timeline with data:", timelineData);
         const timeline = await drizzleService.createTimeline(timelineData);
-        console.log("Timeline created successfully:", timeline);
-        return res.status(200).json(timeline);
+        return res.status(201).json(timeline);
     }));
 
-    // Stories endpoints
+    // Stories endpoints - specific routes before parametric to avoid /stories/tags matching :id
+    app.get(`${global_path}/stories/tags`, async (req, res) => {
+        try {
+            const stories = await drizzleService.getStories({ published: true, approved: true });
+            const allTags = new Set<string>();
+
+            stories.forEach(story => {
+                if (story.tags && Array.isArray(story.tags)) {
+                    story.tags.forEach(tag => allTags.add(tag));
+                }
+            });
+
+            const sortedTags = Array.from(allTags).sort();
+            return res.status(200).json(sortedTags);
+        } catch (error) {
+            console.error("Error fetching story tags:", error);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+    });
+
     app.get(`${global_path}/stories`, async (req, res) => {
         try {
             // Extract query parameters
@@ -185,24 +235,6 @@ export function registerStoriesRoutes(app: Express, global_path: string) {
     // Get individual story
     app.get(`${global_path}/stories/:id`, async (req, res, next) => {
         try {
-            // Skip the tags endpoint - special case
-            if (req.params.id === 'tags') {
-                const allStories = await drizzleService.getStories();
-                const uniqueTags = new Set<string>();
-                allStories.forEach((story: Story) => {
-                    if (story.tags && Array.isArray(story.tags)) {
-                        story.tags.forEach((tag: string) => {
-                            if (tag) uniqueTags.add(tag);
-                        });
-                    }
-                });
-
-                return res.status(200).json({
-                    success: true,
-                    data: Array.from(uniqueTags)
-                });
-            }
-
             const storyId = req.params.id;
             const story = await drizzleService.getStory(storyId);
 
@@ -216,26 +248,6 @@ export function registerStoriesRoutes(app: Express, global_path: string) {
             });
         } catch (error) {
             next(error);
-        }
-    });
-
-    // Get all story tags
-    app.get(`${global_path}/stories/tags`, async (req, res) => {
-        try {
-            const stories = await drizzleService.getStories({ published: true, approved: true });
-            const allTags = new Set<string>();
-
-            stories.forEach(story => {
-                if (story.tags && Array.isArray(story.tags)) {
-                    story.tags.forEach(tag => allTags.add(tag));
-                }
-            });
-
-            const sortedTags = Array.from(allTags).sort();
-            return res.status(200).json(sortedTags);
-        } catch (error) {
-            console.error("Error fetching story tags:", error);
-            return res.status(500).json({ error: 'Internal server error' });
         }
     });
 }

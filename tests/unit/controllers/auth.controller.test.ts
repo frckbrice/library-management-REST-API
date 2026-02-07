@@ -3,16 +3,14 @@
  */
 
 import { Request, Response } from 'express';
-import { compare } from 'bcrypt';
 import { AuthController } from '../../../src/controllers/auth.controller';
 import { AuthenticationError } from '../../../src/utils/errors';
-import drizzleService from '../../../services/drizzle-services';
+import { authService } from '../../../src/services/auth.service';
 import { logger } from '../../../src/middlewares/logger';
-import { createMockRequest, createMockResponse, createMockSession } from '../../utils/mocks';
+import { createMockRequest, createMockResponse, createMockSession } from '../../helpers/mocks';
 
 // Mock dependencies
-jest.mock('bcrypt');
-jest.mock('../../../services/drizzle-services');
+jest.mock('../../../src/services/auth.service');
 jest.mock('../../../src/middlewares/logger', () => ({
     logger: {
         info: jest.fn(),
@@ -21,8 +19,7 @@ jest.mock('../../../src/middlewares/logger', () => ({
     },
 }));
 
-const mockedCompare = compare as jest.MockedFunction<typeof compare>;
-const mockedDrizzleService = drizzleService as jest.Mocked<typeof drizzleService>;
+const mockedAuthService = authService as jest.Mocked<typeof authService>;
 
 describe('AuthController', () => {
     let authController: AuthController;
@@ -37,16 +34,13 @@ describe('AuthController', () => {
     });
 
     describe('login', () => {
-        const mockUser = {
+        const mockSessionUser = {
             id: 'user-123',
             username: 'testuser',
-            password: 'hashedPassword',
             fullName: 'Test User',
             email: 'test@example.com',
             role: 'library_admin',
             libraryId: 'library-123',
-            createdAt: new Date(),
-            updatedAt: new Date(),
         };
 
         it('should successfully login with valid credentials', async () => {
@@ -56,32 +50,19 @@ describe('AuthController', () => {
             };
             mockRequest.session = createMockSession() as any;
 
-            mockedDrizzleService.getUserByUsername.mockResolvedValue(mockUser as any);
-            (mockedCompare as jest.Mock).mockResolvedValue(true);
+            mockedAuthService.authenticateUser.mockResolvedValue(mockSessionUser);
 
             await authController.login(mockRequest as Request, mockResponse as Response);
 
-            expect(mockedDrizzleService.getUserByUsername).toHaveBeenCalledWith('testuser');
-            expect(mockedCompare).toHaveBeenCalledWith('password123', 'hashedPassword');
-            expect((mockRequest.session as any)!.user).toEqual({
-                id: 'user-123',
+            expect(mockedAuthService.authenticateUser).toHaveBeenCalledWith({
                 username: 'testuser',
-                fullName: 'Test User',
-                email: 'test@example.com',
-                role: 'library_admin',
-                libraryId: 'library-123',
+                password: 'password123',
             });
+            expect((mockRequest.session as any)!.user).toEqual(mockSessionUser);
             expect(mockResponse.status).toHaveBeenCalledWith(200);
             expect(mockResponse.json).toHaveBeenCalledWith({
                 success: true,
-                data: {
-                    id: 'user-123',
-                    username: 'testuser',
-                    fullName: 'Test User',
-                    email: 'test@example.com',
-                    role: 'library_admin',
-                    libraryId: 'library-123',
-                },
+                data: mockSessionUser,
             });
             expect(logger.info).toHaveBeenCalledWith('User logged in', {
                 userId: 'user-123',
@@ -95,14 +76,18 @@ describe('AuthController', () => {
                 password: 'password123',
             };
 
-            mockedDrizzleService.getUserByUsername.mockResolvedValue(undefined);
+            mockedAuthService.authenticateUser.mockRejectedValue(
+                new AuthenticationError('Invalid username or password')
+            );
 
             await expect(
                 authController.login(mockRequest as Request, mockResponse as Response)
-            ).rejects.toThrow(AuthenticationError);
+            ).rejects.toMatchObject({ message: 'Invalid username or password', statusCode: 401 });
 
-            expect(mockedDrizzleService.getUserByUsername).toHaveBeenCalledWith('nonexistent');
-            expect(mockedCompare).not.toHaveBeenCalled();
+            expect(mockedAuthService.authenticateUser).toHaveBeenCalledWith({
+                username: 'nonexistent',
+                password: 'password123',
+            });
             expect(mockResponse.json).not.toHaveBeenCalled();
         });
 
@@ -112,25 +97,28 @@ describe('AuthController', () => {
                 password: 'wrongpassword',
             };
 
-            mockedDrizzleService.getUserByUsername.mockResolvedValue(mockUser as any);
-            (mockedCompare as jest.Mock).mockResolvedValue(false);
+            mockedAuthService.authenticateUser.mockRejectedValue(
+                new AuthenticationError('Invalid username or password')
+            );
 
             await expect(
                 authController.login(mockRequest as Request, mockResponse as Response)
-            ).rejects.toThrow(AuthenticationError);
+            ).rejects.toMatchObject({ message: 'Invalid username or password', statusCode: 401 });
 
-            expect(mockedDrizzleService.getUserByUsername).toHaveBeenCalledWith('testuser');
-            expect(mockedCompare).toHaveBeenCalledWith('wrongpassword', 'hashedPassword');
-            expect((mockRequest.session as any)!.user).toBeUndefined();
+            expect(mockedAuthService.authenticateUser).toHaveBeenCalledWith({
+                username: 'testuser',
+                password: 'wrongpassword',
+            });
+            expect((mockRequest.session as { user?: unknown })?.user).toBeUndefined();
         });
 
-        it('should handle errors from getUserByUsername', async () => {
+        it('should handle errors from authenticateUser', async () => {
             mockRequest.body = {
                 username: 'testuser',
                 password: 'password123',
             };
 
-            mockedDrizzleService.getUserByUsername.mockRejectedValue(new Error('Database error'));
+            mockedAuthService.authenticateUser.mockRejectedValue(new Error('Database error'));
 
             await expect(
                 authController.login(mockRequest as Request, mockResponse as Response)

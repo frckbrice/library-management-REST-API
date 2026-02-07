@@ -1,14 +1,25 @@
+/**
+ * Events Routes
+ *
+ * CRUD for events. Create/update use requireAuth, session libraryId, and
+ * optional event image upload. List and delete scoped by library or id.
+ *
+ * @module src/routes/events.routes
+ */
+
 import type { Express } from "express";
-import drizzleService from "../../services/drizzle-services";
+import drizzleService from "../services/drizzle-services";
+import { requireAuth } from "../middlewares/auth";
 import { upload, apiHandler, uploadImageToCloudinary } from "./shared";
 
+/**
+ * Registers events routes: POST/PATCH/GET/DELETE events; create/update use requireAuth and optional image upload.
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerEventsRoutes(app: Express, global_path: string) {
-    app.post(`${global_path}/events`, upload.single('eventImage'), apiHandler(async (req, res) => {
-        if (!req.session.user) {
-            return res.status(403).json({ error: 'Unauthorized - not logged in' });
-        }
-
-        const libraryId = req.session.user.libraryId;
+    app.post(`${global_path}/events`, requireAuth, upload.single('eventImage'), apiHandler(async (req, res) => {
+        const libraryId = req.session!.user!.libraryId;
         if (!libraryId) {
             return res.status(400).json({ error: 'Library ID required' });
         }
@@ -36,11 +47,7 @@ export function registerEventsRoutes(app: Express, global_path: string) {
     }));
 
     // Update event with image upload
-    app.patch(`${global_path}/events/:id`, upload.single('eventImage'), apiHandler(async (req, res) => {
-        if (!req.session.user) {
-            return res.status(403).json({ error: 'Unauthorized - not logged in' });
-        }
-
+    app.patch(`${global_path}/events/:id`, requireAuth, upload.single('eventImage'), apiHandler(async (req, res) => {
         const eventId = req.params.id;
         const existingEvent = await drizzleService.getEvent(eventId);
 
@@ -48,8 +55,8 @@ export function registerEventsRoutes(app: Express, global_path: string) {
             return res.status(404).json({ error: 'Event not found' });
         }
 
-        // Check ownership
-        if (req.session.user.role === 'library_admin' && existingEvent.libraryId !== req.session.user.libraryId) {
+        // Check ownership for library admins
+        if (req.session!.user!.role === 'library_admin' && existingEvent.libraryId !== req.session!.user!.libraryId) {
             return res.status(403).json({ error: 'Unauthorized - you can only edit events for your library' });
         }
 
@@ -73,7 +80,24 @@ export function registerEventsRoutes(app: Express, global_path: string) {
         return res.status(200).json(updatedEvent);
     }));
 
-    // Events endpoints
+    // Get single event
+    app.get(`${global_path}/events/:id`, async (req, res) => {
+        try {
+            const eventId = req.params.id;
+            const event = await drizzleService.getEvent(eventId);
+
+            if (!event) {
+                return res.status(404).json({ error: 'Event not found' });
+            }
+
+            return res.status(200).json(event);
+        } catch (error) {
+            console.error(`Error fetching event with ID ${req.params.id}:`, error);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+    });
+
+    // Events list endpoint
     app.get(`${global_path}/events`, async (req, res) => {
         try {
             const libraryId = req.session.user?.libraryId;
@@ -87,19 +111,23 @@ export function registerEventsRoutes(app: Express, global_path: string) {
         }
     });
 
-    app.delete(`${global_path}/events/:id`, async (req, res) => {
-        try {
-            const eventId = req.params.id;
-            const deleted = await drizzleService.deleteEvent(eventId);
+    app.delete(`${global_path}/events/:id`, requireAuth, apiHandler(async (req, res) => {
+        const eventId = req.params.id;
+        const existingEvent = await drizzleService.getEvent(eventId);
 
-            if (!deleted) {
-                return res.status(404).json({ error: 'Event not found' });
-            }
-
-            return res.status(200).json({ success: true });
-        } catch (error) {
-            console.error("Error deleting event:", error);
-            return res.status(500).json({ error: 'Internal server error' });
+        if (!existingEvent) {
+            return res.status(404).json({ error: 'Event not found' });
         }
-    });
+
+        if (req.session!.user!.role === 'library_admin' && existingEvent.libraryId !== req.session!.user!.libraryId) {
+            return res.status(403).json({ error: 'Unauthorized - you can only delete events for your library' });
+        }
+
+        const deleted = await drizzleService.deleteEvent(eventId);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        return res.status(204).send();
+    }));
 }

@@ -1,6 +1,15 @@
+/**
+ * Settings Routes
+ *
+ * Get/update platform settings and test email. State is in-memory; in
+ * production should be persisted (e.g. database).
+ *
+ * @module src/routes/settings.routes
+ */
+
 import type { Express } from "express";
 
-// Settings state (in production, this should be in a database)
+/** In-memory platform settings; prefer database in production. */
 let platformSettings = {
     general: {
         siteName: "Library Digital Platform",
@@ -56,6 +65,11 @@ let platformSettings = {
     }
 };
 
+/**
+ * Registers settings routes: GET/POST settings, POST test-email.
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerSettingsRoutes(app: Express, global_path: string) {
     // Get platform settings
     app.get(`${global_path}/settings`, async (req, res) => {

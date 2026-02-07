@@ -1,15 +1,13 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/tests', '<rootDir>/src', '<rootDir>/services', '<rootDir>/middlewares', '<rootDir>/config'],
+  roots: ['<rootDir>/tests', '<rootDir>/src', '<rootDir>/config'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
   collectCoverageFrom: [
     'src/**/*.ts',
-    'services/**/*.ts',
-    'middlewares/**/*.ts',
     'config/**/*.ts',
     '!**/*.d.ts',
     '!**/node_modules/**',
@@ -24,5 +22,6 @@ module.exports = {
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
+  forceExit: true,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
 };

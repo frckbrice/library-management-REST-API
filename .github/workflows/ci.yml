@@ -6,6 +6,7 @@
 # 2. Linting (ESLint)
 # 3. Testing (Jest)
 # 4. Building (TypeScript compilation)
+
 #
 # The workflow uses pnpm as the package manager and supports multiple Node.js versions.
 

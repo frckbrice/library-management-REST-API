@@ -1,3 +1,13 @@
+/**
+ * Application Logger
+ *
+ * Winston logger with file transports (error.log, combined.log) and optional
+ * console output in non-production. Also exports requestLogger middleware for
+ * structured HTTP request logging.
+ *
+ * @module src/middlewares/logger
+ */
+
 import { createLogger, format, transports } from 'winston';
 import { env } from '../config/env';
 
@@ -36,7 +46,10 @@ if (env.NODE_ENV !== 'production') {
     );
 }
 
-// Request logging middleware
+/**
+ * Express middleware that logs each request (method, path, status, duration, IP, user-agent)
+ * and optionally the response body for paths under /api.
+ */
 export const requestLogger = (req: any, res: any, next: any) => {
     const start = Date.now();
     const path = req.path;

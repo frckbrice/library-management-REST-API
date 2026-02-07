@@ -1,9 +1,23 @@
+/**
+ * Libraries Routes
+ *
+ * Create library (requireSuperAdmin, multipart logo/featuredImage). Update/delete
+ * requireLibraryAdmin and session libraryId. List and get by ID are public.
+ *
+ * @module src/routes/libraries.routes
+ */
+
 import type { Express } from "express";
-import drizzleService from "../../services/drizzle-services";
+import drizzleService from "../services/drizzle-services";
 import { NotFoundError, AuthorizationError } from "../utils/errors";
-import { requireSuperAdmin, requireLibraryAdmin } from "../../middlewares/auth";
+import { requireSuperAdmin, requireLibraryAdmin } from "../middlewares/auth";
 import { upload, apiHandler, uploadImageToCloudinary } from "./shared";
 
+/**
+ * Registers libraries routes: POST create (super admin, multipart), PATCH/GET by id, GET list (public).
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerLibrariesRoutes(app: Express, global_path: string) {
     app.post(`${global_path}/libraries`, requireSuperAdmin, upload.fields([
         { name: 'logo', maxCount: 1 },

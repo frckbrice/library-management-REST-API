@@ -1,13 +1,26 @@
+/**
+ * Auth Routes
+ *
+ * Login (rate-limited, validated), session get, and logout. Uses in-route
+ * logic and drizzleService; consider migrating to AuthController for consistency.
+ *
+ * @module src/routes/auth.routes
+ */
+
 import type { Express, Request, Response, NextFunction } from "express";
 import { compare } from "bcrypt";
-import drizzleService from "../../services/drizzle-services";
-import { validate } from "../../utils/validations";
+import drizzleService from "../services/drizzle-services";
+import { validate } from "../middlewares/validation";
 import { loginSchema } from "../validations/auth.schemas";
 import { AuthenticationError } from "../utils/errors";
-import { authLimiter } from '../../middlewares/rate-limiters';
+import { authLimiter } from '../middlewares/rate-limiters';
 
+/**
+ * Registers auth routes: POST login (rate-limited, validated), GET session, POST logout.
+ * @param app - Express application
+ * @param global_path - Base path (e.g. /api/v1)
+ */
 export function registerAuthRoutes(app: Express, global_path: string) {
-    // Authentication routes
     app.post(`${global_path}/auth/login`, authLimiter, validate(loginSchema), async (req, res, next) => {
         try {
             const { username, password } = req.body;

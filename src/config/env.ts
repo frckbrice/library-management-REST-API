@@ -45,6 +45,8 @@ const envSchema = z.object({
     // Email - optional (only needed for email functionality)
     GMAIL_USER: z.string().email().optional(),
     GMAIL_PASS: z.string().optional(),
+    /** Contact email shown in API docs (e.g. Swagger). */
+    GMAIL_APP_SUPPORT: z.string().email().optional(),
 
     // CORS - defaults to common development origins
     ALLOWED_ORIGINS: z.string().default('http://localhost:3000,http://localhost:3001'),

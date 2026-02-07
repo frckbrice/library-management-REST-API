@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "nodemon --exec ts-node index.ts",
 		"start": "node dist/index.js",
-		"prebuild": "find node_modules -type d -name 'sqlite-core' -exec rm -rf {} +",
+		"prebuild": "node -e \"try{require('fs').rmSync(require('path').join(process.cwd(),'node_modules','drizzle-orm','sqlite-core'),{recursive:true,force:true})}catch(e){}\"",
 		"build": "tsc",
 		"build:prod": "NODE_ENV=production tsc",
 		"check": "tsc --noEmit",
@@ -38,6 +38,7 @@
 		"express": "^4.21.2",
 		"express-rate-limit": "^7.5.0",
 		"express-session": "^1.18.1",
+		"helmet": "^8.0.0",
 		"jest": "^30.0.3",
 		"memorystore": "^1.6.7",
 		"multer": "^2.0.1",
@@ -53,10 +54,13 @@
 		"winston": "^3.19.0",
 		"ws": "^8.18.0",
 		"zod": "^3.24.2",
-		"zod-validation-error": "^3.4.0"
+		"zod-validation-error": "^3.4.0",
+		"winston": "^3.17.0",
+		"swagger-ui-express": "^5.0.1"
 	},
 	"devDependencies": {
 		"@types/connect-pg-simple": "^7.0.3",
+		"@types/swagger-ui-express": "^4.1.6",
 		"@types/cors": "^2.8.19",
 		"@types/express": "4.17.21",
 		"@types/express-session": "^1.18.0",

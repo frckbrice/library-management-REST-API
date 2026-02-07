@@ -1,28 +1,42 @@
+/**
+ * API Rate Limiters
+ *
+ * Preconfigured express-rate-limit instances for different route groups.
+ * Uses centralized error response format (success, error, code, timestamp).
+ *
+ * @module src/middlewares/rate-limiters
+ */
+
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
+import { formatErrorResponse, ErrorCode } from '../utils/api-response';
 
-// Extend Express Request type to include rateLimit property
 declare module 'express' {
   interface Request {
     rateLimit?: {
       resetTime?: number;
-      [key: string]: any;
+      [key: string]: unknown;
     };
   }
 }
 
-// Helper function to create custom error messages
+const isProduction = process.env.NODE_ENV === 'production';
+
+/** Returns a 429 handler using the shared error response format. */
 const createLimitHandler = (message: string) => {
   return (req: Request, res: Response) => {
-    res.status(429).json({
-      error: 'Too Many Requests',
-      message,
-      retryAfter: Math.round((req as any).rateLimit?.resetTime / 1000) || 60
+    const retryAfter = Math.round((req as any).rateLimit?.resetTime / 1000) || 60;
+    const { statusCode, body } = formatErrorResponse({
+      statusCode: 429,
+      error: message,
+      code: ErrorCode.RATE_LIMITED,
+      isProduction,
     });
+    res.status(statusCode).json({ ...body, retryAfter });
   };
 };
 
-// General API rate limiter - 100 requests per 15 minutes
+/** 100 requests per 15 minutes per IP for general API. */
 export const generalApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
@@ -32,7 +46,7 @@ export const generalApiLimiter = rateLimit({
   handler: createLimitHandler('Too many API requests, please try again in 15 minutes.')
 });
 
-// Strict limiter for authentication endpoints - 5 attempts per 15 minutes
+/** 5 attempts per 15 minutes per IP for auth; successful requests not counted. */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 login requests per windowMs
@@ -43,7 +57,7 @@ export const authLimiter = rateLimit({
   handler: createLimitHandler('Too many login attempts. Please try again in 15 minutes.')
 });
 
-// Contact form limiter - 3 submissions per hour
+/** 3 contact form submissions per hour per IP. */
 export const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // limit each IP to 3 contact form submissions per hour
@@ -53,7 +67,7 @@ export const contactLimiter = rateLimit({
   handler: createLimitHandler('Too many contact form submissions. Please try again in 1 hour.')
 });
 
-// File upload limiter - 10 uploads per hour
+/** 10 file uploads per hour per IP. */
 export const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // limit each IP to 10 file uploads per hour
@@ -63,7 +77,7 @@ export const uploadLimiter = rateLimit({
   handler: createLimitHandler('Too many file uploads. Please try again in 1 hour.')
 });
 
-// Admin actions limiter - 200 requests per hour
+/** 200 admin requests per hour per IP. */
 export const adminLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 200, // limit each IP to 200 admin requests per hour
@@ -73,7 +87,7 @@ export const adminLimiter = rateLimit({
   handler: createLimitHandler('Too many admin actions. Please try again in 1 hour.')
 });
 
-// Public content limiter - 500 requests per hour (more generous for browsing)
+/** 500 requests per hour per IP for public content (libraries, stories, events, media). */
 export const publicLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 500, // limit each IP to 500 public requests per hour
@@ -83,7 +97,7 @@ export const publicLimiter = rateLimit({
   handler: createLimitHandler('Too many requests. Please try again in 1 hour.')
 });
 
-// Password reset limiter - 3 attempts per hour
+/** 3 password reset attempts per hour per IP. */
 export const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // limit each IP to 3 password reset requests per hour
@@ -93,7 +107,7 @@ export const passwordResetLimiter = rateLimit({
   handler: createLimitHandler('Too many password reset attempts. Please try again in 1 hour.')
 });
 
-// Email sending limiter - 10 emails per hour
+/** 10 email sends per hour per IP. */
 export const emailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // limit each IP to 10 email sends per hour
@@ -103,7 +117,7 @@ export const emailLimiter = rateLimit({
   handler: createLimitHandler('Too many emails sent. Please try again in 1 hour.')
 });
 
-// Search limiter - 100 searches per 15 minutes
+/** 100 search requests per 15 minutes per IP. */
 export const searchLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 search requests per windowMs

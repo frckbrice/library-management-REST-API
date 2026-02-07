@@ -1,3 +1,12 @@
+/**
+ * Drizzle Services (Database Storage)
+ *
+ * Implements IStorage: CRUD for users, libraries, stories, media, timelines,
+ * events, contact messages, analytics, message responses, email templates;
+ * health check and gallery list. Uses Drizzle ORM and config/database/db.
+ *
+ * @module src/services/drizzle-services
+ */
 
 import {
     User,
@@ -23,17 +32,20 @@ import {
 
     users, libraries, stories, mediaItems, timelines,
     events, contactMessages, analytics, messageResponses, emailTemplates,
-} from "../config/database/schema";
+} from "../../config/database/schema";
 
-import dbPool from "../config/database/db";
-import { eq, desc, and, gte, lte, isNull } from "drizzle-orm";
-import { IStorage } from "../config/database/storage";
+import dbPool from "../../config/database/db";
+import { eq, desc, and, gte, lte, isNull, sql } from "drizzle-orm";
+import { IStorage } from "../../config/database/storage";
 
 const { db } = dbPool;
 
-
+/**
+ * Database storage implementation: all entity CRUD and queries via Drizzle.
+ */
 export class DatabaseStorage implements IStorage {
     // Users
+    /** Fetches a user by ID. */
     async getUser(id: string): Promise<User | undefined> {
         try {
             const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -44,6 +56,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Fetches a user by username. */
     async getUserByUsername(username: string): Promise<User | undefined> {
         try {
             const [user] = await db.select().from(users).where(eq(users.username, username));
@@ -54,6 +67,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Fetches all users for a library. */
     async getUsersByLibraryId(libraryId: string): Promise<User[]> {
         try {
             return db.select().from(users).where(eq(users.libraryId, libraryId));
@@ -84,6 +98,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Updates a user by ID. */
     async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {
         try {
             const [updatedUser] = await db.update(users).set(data).where(eq(users.id, id)).returning();
@@ -105,6 +120,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Fetches a library by name. */
     async getLibraryByName(name: string): Promise<Library | undefined> {
         try {
             const [library] = await db.select().from(libraries).where(eq(libraries.name, name));
@@ -165,6 +181,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Returns total library count with optional filters. */
     async getTotalLibraries(options?: {
         approved?: boolean;
         featured?: boolean;
@@ -209,6 +226,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Updates a library by ID. */
     async updateLibrary(id: string, data: Partial<Library>): Promise<Library | undefined> {
         try {
             const [updatedLibrary] = await db.update(libraries).set(data).where(eq(libraries.id, id)).returning();
@@ -220,6 +238,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Stories
+    /** Fetches a story by ID. */
     async getStory(id: string): Promise<Story | undefined> {
         try {
             const [story] = await db.select().from(stories).where(eq(stories.id, id));
@@ -230,6 +249,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Lists stories with optional filters. */
     async getStories(options?: {
         libraryId?: string;
         published?: boolean;
@@ -286,6 +306,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Creates a story. */
     async createStory(insertStory: InsertStory): Promise<Story> {
         try {
             const [story] = await db.insert(stories).values(insertStory).returning();
@@ -306,6 +327,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Deletes a story by ID. */
     async deleteStory(id: string): Promise<boolean> {
         try {
             const result = await db.delete(stories).where(eq(stories.id, id)).returning();
@@ -317,6 +339,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Media Items
+    /** Fetches a media item by ID. */
     async getMediaItem(id: string): Promise<MediaItem | undefined> {
         try {
             const [mediaItem] = await db.select().from(mediaItems).where(eq(mediaItems.id, id));
@@ -382,6 +405,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Creates a media item. */
     async createMediaItem(insertMediaItem: InsertMediaItem): Promise<MediaItem> {
         try {
             const [mediaItem] = await db.insert(mediaItems).values(insertMediaItem).returning();
@@ -402,6 +426,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Deletes a media item by ID. */
     async deleteMediaItem(id: string): Promise<boolean> {
         try {
             const result = await db.delete(mediaItems).where(eq(mediaItems.id, id)).returning();
@@ -423,6 +448,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Lists timelines for a story. */
     async getTimelinesByStoryId(storyId: string): Promise<Timeline[]> {
         try {
             return db.select().from(timelines).where(eq(timelines.storyId, storyId));
@@ -432,6 +458,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Creates a timeline. */
     async createTimeline(insertTimeline: InsertTimeline): Promise<Timeline> {
         try {
             const [timeline] = await db.insert(timelines).values(insertTimeline).returning();
@@ -452,6 +479,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Deletes a timeline by ID. */
     async deleteTimeline(id: string): Promise<boolean> {
         try {
             const result = await db.delete(timelines).where(eq(timelines.id, id)).returning();
@@ -473,6 +501,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Lists events with optional filters. */
     async getEvents(options?: {
         libraryId?: string;
         published?: boolean;
@@ -526,6 +555,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Creates an event. */
     async createEvent(insertEvent: InsertEvent): Promise<Event> {
         try {
             const [event] = await db.insert(events).values(insertEvent).returning();
@@ -536,6 +566,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Updates an event by ID. */
     async updateEvent(id: string, data: Partial<Event>): Promise<Event | undefined> {
         try {
             const [updatedEvent] = await db.update(events).set(data).where(eq(events.id, id)).returning();
@@ -546,6 +577,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Deletes an event by ID. */
     async deleteEvent(id: string): Promise<boolean> {
         try {
             const result = await db.delete(events).where(eq(events.id, id)).returning();
@@ -557,6 +589,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Contact Messages
+    /** Fetches a contact message by ID. */
     async getContactMessage(id: string): Promise<ContactMessage | undefined> {
         try {
             const [message] = await db.select().from(contactMessages).where(eq(contactMessages.id, id));
@@ -567,6 +600,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Lists contact messages with optional filters. */
     async getContactMessages(options?: {
         libraryId?: string;
         read?: boolean;
@@ -619,6 +653,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Updates a contact message by ID. */
     async updateContactMessage(id: string, data: Partial<ContactMessage>): Promise<ContactMessage | undefined> {
         try {
             const [updatedMessage] = await db.update(contactMessages).set(data).where(eq(contactMessages.id, id)).returning();
@@ -640,6 +675,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Analytics
+    /** Fetches analytics rows with optional filters. */
     async getAnalytics(options: {
         libraryId?: string;
         storyId?: string;
@@ -724,6 +760,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Message Responses
+    /** Fetches a message response by ID. */
     async getMessageResponse(id: string): Promise<MessageResponse | undefined> {
         try {
             const [response] = await db.select().from(messageResponses).where(eq(messageResponses.id, id));
@@ -745,6 +782,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Creates a message response. */
     async createMessageResponse(insertResponse: InsertMessageResponse): Promise<MessageResponse> {
         try {
             const [response] = await db.insert(messageResponses).values(insertResponse).returning();
@@ -766,6 +804,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Email Templates
+    /** Fetches an email template by ID. */
     async getEmailTemplate(id: string): Promise<EmailTemplate | undefined> {
         try {
             const [template] = await db.select().from(emailTemplates).where(eq(emailTemplates.id, id));
@@ -803,6 +842,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Creates an email template. */
     async createEmailTemplate(insertTemplate: InsertEmailTemplate): Promise<EmailTemplate> {
         try {
             const [template] = await db.insert(emailTemplates).values(insertTemplate).returning();
@@ -823,6 +863,7 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
+    /** Deletes an email template by ID. */
     async deleteEmailTemplate(id: string): Promise<boolean> {
         try {
             const result = await db.delete(emailTemplates).where(eq(emailTemplates.id, id)).returning();
@@ -834,6 +875,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Galleries (unique galleryId values from mediaItems)
+    /** Returns distinct gallery IDs from media items. */
     async getGalleries(): Promise<string[]> {
         try {
             const rows = await db.select({ galleryId: mediaItems.galleryId }).from(mediaItems);
@@ -850,15 +892,24 @@ export class DatabaseStorage implements IStorage {
         }
     }
 
-    // Health check method
+    // Health check method (lightweight SELECT 1 with retry for stale connections)
+    /** Runs a simple DB health check (query). */
     async healthCheck(): Promise<boolean> {
-        try {
-            // Perform a simple select to check DB connectivity
-            await db.select().from(users).limit(1);
+        const tryOnce = async (): Promise<boolean> => {
+            await db.execute(sql`SELECT 1`);
             return true;
+        };
+        try {
+            return await tryOnce();
         } catch (error) {
-            console.error('Database health check failed:', error);
-            return false;
+            console.error('Database health check failed (first attempt):', error);
+            try {
+                await new Promise((r) => setTimeout(r, 300));
+                return await tryOnce();
+            } catch (retryError) {
+                console.error('Database health check failed (retry):', retryError);
+                return false;
+            }
         }
     }
 
