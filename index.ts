@@ -8,7 +8,7 @@
  * @module index
  */
 
-import express, { type Request, Response, NextFunction } from "express";
+import express from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import connectPgSimple from "connect-pg-simple";
@@ -19,8 +19,7 @@ import { Pool } from "pg";
 import errorHandler from "./src/middlewares/error-handler";
 import helmet from "helmet";
 import cors from "cors";
-import { MemStorage } from "./config/database/storage";
-
+import { env } from "./src/config/env";
 import corsOptions from "./config/cors/cors-options";
 import swaggerUi from "swagger-ui-express";
 import { openApiDocument } from "./config/swagger";
@@ -38,8 +37,6 @@ declare module "express-session" {
     };
   }
 }
-
-const PORT = process.env.PORT || 5500;
 
 // Setup session stores
 const MemoryStoreSession = MemoryStore(session);
@@ -73,7 +70,7 @@ app.use(cors(corsOptions));
 
 /** Session middleware: persistent in production (PgStore), in-memory otherwise */
 app.use(session({
-  store: process.env.DATAAPI_URL
+  store: env.DATAAPI_URL
     ? new PgStore({
       pool,
       tableName: 'session',
@@ -82,11 +79,11 @@ app.use(session({
     : new MemoryStoreSession({
       checkPeriod: 86400000 // every 24h
     }),
-  secret: process.env.SESSION_SECRET || 'library_connect_secret',
+  secret: env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: env.NODE_ENV === 'production',
     maxAge: 1000 * 60 * 60 * 24 // 24 hours
   }
 }));
@@ -126,9 +123,10 @@ app.use((req, res, next) => {
   const server = await registerRoutes("/api/v1", app);
   app.use(errorHandler);
 
-  server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-  }).on("error", () => {
-    console.error("Error starting server");
+  server.listen(env.PORT, () => {
+    console.log(`Server running at http://localhost:${env.PORT} in ${env.NODE_ENV} mode`);
+  }).on("error", (error) => {
+    console.error("Error starting server:", error);
+    process.exit(1);
   });
 })();
