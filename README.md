@@ -87,25 +87,37 @@ This API powers a full content management system for libraries with role-based a
 ## Project Structure
 
 ```
+├── .env.example              # Env template (copy to .env)
+├── .github/
+│   ├── workflows/            # CI (ci.yml), release (release.yml)
+│   └── pull_request_template.md
 ├── config/
 │   ├── bucket-storage/       # Cloudinary setup
 │   ├── cors/                 # CORS config
-│   ├── database/             # Schema, migrations, seed, storage
+│   ├── database/             # Schema, migrations, seed, storage, db
 │   └── swagger.ts            # OpenAPI spec
+├── drizzle/                  # SQL migrations and meta
 ├── src/
 │   ├── config/               # Env validation (Zod)
-│   ├── controllers/          # Request handlers
+│   ├── controllers/         # Request handlers
 │   ├── middlewares/          # Auth, validation, error-handler, logger, rate-limiters
 │   ├── routes/               # API route definitions
 │   ├── services/             # Business logic (drizzle, email)
-│   ├── types/                # TypeScript declarations
+│   ├── types/                # TypeScript declarations (e.g. express.d.ts)
 │   ├── utils/                # Errors, validations, api-response
 │   └── validations/          # Zod request schemas
 ├── tests/
 │   ├── helpers/              # Mocks (Request, Response, session)
+│   ├── setup.ts
 │   └── unit/                 # Controllers, services, middlewares, routes, utils
-├── .github/workflows/        # CI pipeline
+├── scripts/                  # git-flow and tooling
 ├── index.ts                  # App entry point
+├── drizzle.config.ts
+├── jest.config.js
+├── tsconfig.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
 └── render.yaml               # Render deployment config
 ```
 

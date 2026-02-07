@@ -17,7 +17,7 @@ import { registerRoutes } from "./src/routes";
 import { Pool as NeonPool } from "@neondatabase/serverless";
 import { Pool } from "pg";
 import errorHandler from "./src/middlewares/error-handler";
-import logger from "./src/middlewares/logger";
+import { requestLogger } from "./src/middlewares/logger";
 import helmet from "helmet";
 import cors from "cors";
 import { env } from "./src/config/env";
@@ -76,7 +76,7 @@ app.use(session({
 }));
 
 // Request logging middleware
-app.use(logger);
+app.use(requestLogger);
 
 (async () => {
   const server = await registerRoutes("/api/v1", app);
