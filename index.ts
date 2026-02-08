@@ -78,6 +78,9 @@ app.use(session({
 // Request logging middleware
 app.use(requestLogger);
 
+/** Static files and landing page: GET / serves public/index.html */
+app.use(express.static("public"));
+
 (async () => {
   const server = await registerRoutes("/api/v1", app);
   app.use(errorHandler);

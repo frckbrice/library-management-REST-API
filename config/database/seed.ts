@@ -24,7 +24,7 @@ async function seed() {
     await db.delete(timelines);
     await db.delete(mediaItems);
     await db.delete(stories);
-    // await db.delete(users);
+    await db.delete(users);
     await db.delete(libraries);
     await db.delete(emailTemplates);
     await db.delete(messageResponses);

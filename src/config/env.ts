@@ -30,7 +30,8 @@ const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     PORT: z.string().transform(Number).default('5500'),
 
-    // Database - at least one must be provided
+    // Database - required for app and migrations/seed
+    DATABASE_PRO_URL: z.string().url(),
     DATABASE_URL: z.string().url().optional(),
     DATAAPI_URL: z.string().url().optional(),
 
