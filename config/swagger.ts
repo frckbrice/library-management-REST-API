@@ -59,8 +59,8 @@ export const openApiDocument = {
     { name: 'Contact', description: 'Contact messages and replies' },
     { name: 'Admin', description: 'Library admin dashboard and content' },
     { name: 'Superadmin', description: 'Moderation and global admin' },
-    { name: 'Settings', description: 'Platform settings' },
-    { name: 'Maintenance', description: 'Health, maintenance mode, backups' },
+    { name: 'Settings', description: 'Platform settings (superadmin only; cookieAuth)' },
+    { name: 'Maintenance', description: 'Health (public), maintenance mode, backups (superadmin only; cookieAuth)' },
   ],
   paths: {
     [`${apiPath}/auth/login`]: {
@@ -1224,7 +1224,8 @@ export const openApiDocument = {
       get: {
         tags: ['Settings'],
         summary: 'Get platform settings',
-        description: 'Returns general, security, email, content, appearance, notifications settings.',
+        description: 'Returns general, security, email, content, appearance, notifications settings. **Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         responses: {
           '200': {
             description: 'Platform settings object',
@@ -1240,7 +1241,8 @@ export const openApiDocument = {
       post: {
         tags: ['Settings'],
         summary: 'Update platform settings',
-        description: 'Merges provided updates with existing settings (in-memory; prefer DB in production).',
+        description: 'Merges provided updates with existing settings (in-memory; prefer DB in production). **Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         requestBody: {
           content: {
             'application/json': {
@@ -1268,7 +1270,8 @@ export const openApiDocument = {
       post: {
         tags: ['Settings'],
         summary: 'Test email configuration',
-        description: 'Sends a test email to verify SMTP/email setup.',
+        description: 'Sends a test email to verify SMTP/email setup. **Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         responses: {
           '200': {
             description: 'Test email sent',
@@ -1289,7 +1292,7 @@ export const openApiDocument = {
       get: {
         tags: ['Maintenance'],
         summary: 'Health check',
-        description: 'Verifies database connectivity. Returns system healthy/unhealthy.',
+        description: 'Verifies database connectivity. Returns system healthy/unhealthy. Public (no auth).',
         responses: {
           '200': {
             description: 'System healthy',
@@ -1327,7 +1330,8 @@ export const openApiDocument = {
       get: {
         tags: ['Maintenance'],
         summary: 'Maintenance status',
-        description: 'Returns maintenance mode, system health, metrics, windows, backup history.',
+        description: 'Returns maintenance mode, system health, metrics, windows, backup history. **Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         responses: {
           '200': {
             description: 'Maintenance status',
@@ -1345,6 +1349,8 @@ export const openApiDocument = {
       post: {
         tags: ['Maintenance'],
         summary: 'Toggle maintenance mode',
+        description: '**Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -1383,6 +1389,8 @@ export const openApiDocument = {
       post: {
         tags: ['Maintenance'],
         summary: 'Schedule maintenance window',
+        description: '**Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -1431,6 +1439,8 @@ export const openApiDocument = {
       post: {
         tags: ['Maintenance'],
         summary: 'Create backup',
+        description: '**Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -1472,6 +1482,8 @@ export const openApiDocument = {
       get: {
         tags: ['Maintenance'],
         summary: 'List backup history',
+        description: '**Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         responses: {
           '200': {
             description: 'Backup history',
@@ -1501,7 +1513,8 @@ export const openApiDocument = {
       post: {
         tags: ['Maintenance'],
         summary: 'Refresh system status',
-        description: 'Re-checks system health for all services.',
+        description: 'Re-checks system health for all services. **Superadmin only.**',
+        security: [{ cookieAuth: [] }],
         responses: {
           '200': {
             description: 'Updated system health',

@@ -2,12 +2,14 @@
  * Settings Routes
  *
  * Get/update platform settings and test email. State is in-memory; in
- * production should be persisted (e.g. database).
+ * production should be persisted (e.g. database). All routes require super_admin.
  *
  * @module src/routes/settings.routes
  */
 
 import type { Express } from "express";
+import { requireSuperAdmin } from "../middlewares/auth";
+import { apiHandler } from "./shared";
 
 /** In-memory platform settings; prefer database in production. */
 let platformSettings = {
@@ -71,39 +73,21 @@ let platformSettings = {
  * @param global_path - Base path (e.g. /api/v1)
  */
 export function registerSettingsRoutes(app: Express, global_path: string) {
-    // Get platform settings
-    app.get(`${global_path}/settings`, async (req, res) => {
-        try {
-            return res.status(200).json(platformSettings);
-        } catch (error) {
-            console.error("Error fetching settings:", error);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-    });
+    // Get platform settings (superadmin only)
+    app.get(`${global_path}/settings`, requireSuperAdmin, apiHandler(async (req, res) => {
+        return res.status(200).json(platformSettings);
+    }));
 
-    // Update platform settings
-    app.post(`${global_path}/settings`, async (req, res) => {
-        try {
-            const updates = req.body;
+    // Update platform settings (superadmin only)
+    app.post(`${global_path}/settings`, requireSuperAdmin, apiHandler(async (req, res) => {
+        const updates = req.body;
+        platformSettings = { ...platformSettings, ...updates };
+        return res.status(200).json(platformSettings);
+    }));
 
-            // Merge updates with existing settings
-            platformSettings = { ...platformSettings, ...updates };
-
-            return res.status(200).json(platformSettings);
-        } catch (error) {
-            console.error("Error updating settings:", error);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
-    });
-
-    // Test email configuration
-    app.post(`${global_path}/settings/test-email`, async (req, res) => {
-        try {
-            // Simulate email test
-            return res.status(200).json({ message: 'Test email sent successfully' });
-        } catch (error) {
-            console.error("Error testing email:", error);
-            return res.status(500).json({ error: 'Failed to send test email' });
-        }
-    });
+    // Test email configuration (superadmin only)
+    app.post(`${global_path}/settings/test-email`, requireSuperAdmin, apiHandler(async (req, res) => {
+        // Simulate email test
+        return res.status(200).json({ message: 'Test email sent successfully' });
+    }));
 }
